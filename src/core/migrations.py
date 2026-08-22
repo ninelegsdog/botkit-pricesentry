@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS monitored_items (
     name TEXT NOT NULL,
     marketplace TEXT NOT NULL,
     current_price REAL NOT NULL DEFAULT 0,
+    url TEXT,
     target_price REAL,
     is_active INTEGER NOT NULL DEFAULT 1,
     owner_id INTEGER NOT NULL,
@@ -49,3 +50,9 @@ async def migrate(db: Database) -> None:
             stmt = statement.strip()
             if stmt:
                 await conn.execute(text(stmt))
+        try:
+            await conn.execute(
+                text("ALTER TABLE monitored_items ADD COLUMN url TEXT")
+            )
+        except Exception:
+            pass  # column already exists on upgraded databases

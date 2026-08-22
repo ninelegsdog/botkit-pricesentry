@@ -8,6 +8,7 @@ class ItemAdd(StatesGroup):
     choosing_marketplace = State()
     entering_name = State()
     entering_target_price = State()
+    entering_url = State()
     confirming = State()
 
 

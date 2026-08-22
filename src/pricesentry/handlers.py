@@ -64,6 +64,14 @@ def create_pricesentry_router(state: AppState) -> Router:
         except ValueError:
             target_price = None
         await state_fsm.update_data(target_price=target_price)
+        await state_fsm.set_state(ItemAdd.entering_url)
+        await message.answer("🔗 Ссылка на товар (или - чтобы пропустить):")
+
+    @router.message(ItemAdd.entering_url)
+    async def enter_url(message: Message, state_fsm: FSMContext) -> None:
+        raw = (message.text or "").strip()
+        url = None if raw in ("-", "/skip") else (raw if raw.startswith("http") else None)
+        await state_fsm.update_data(url=url)
         data = await state_fsm.get_data()
         kb = InlineKeyboardMarkup(
             inline_keyboard=[
@@ -74,12 +82,14 @@ def create_pricesentry_router(state: AppState) -> Router:
             ]
         )
         await state_fsm.set_state(ItemAdd.confirming)
+        target_price = data.get("target_price")
         target_str = f"{target_price:.2f}" if target_price else "—"
         await message.answer(
             f"Добавить товар?\n"
             f"📦 {escape(str(data.get('name', '')))}\n"
             f"🛒 {escape(str(data.get('marketplace', '')))}\n"
-            f"🎯 Целевая: {target_str}",
+            f"🎯 Целевая: {target_str}\n"
+            f"🔗 URL: {data.get('url') or '—'}",
             reply_markup=kb,
         )
 
@@ -93,6 +103,7 @@ def create_pricesentry_router(state: AppState) -> Router:
             name=str(data.get("name", "")),
             marketplace=str(data.get("marketplace", "")),
             target_price=data.get("target_price"),
+            url=data.get("url"),
         )
         await state_fsm.clear()
         await callback.message.edit_text("✅ Товар добавлен!")  # type: ignore[union-attr]

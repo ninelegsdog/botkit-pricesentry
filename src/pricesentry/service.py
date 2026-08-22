@@ -15,14 +15,22 @@ async def add_item(
     name: str,
     marketplace: str,
     target_price: float | None = None,
+    url: str | None = None,
 ) -> int:
     async with db.transaction() as session:
         result = await session.execute(
             text(
-                "INSERT INTO monitored_items (sku, name, marketplace, target_price, owner_id) "
-                "VALUES (:sku, :name, :mp, :tp, :owner)"
+                "INSERT INTO monitored_items (sku, name, marketplace, target_price, owner_id, url) "
+                "VALUES (:sku, :name, :mp, :tp, :owner, :url)"
             ),
-            {"sku": sku, "name": name, "mp": marketplace, "tp": target_price, "owner": owner_id},
+            {
+                "sku": sku,
+                "name": name,
+                "mp": marketplace,
+                "tp": target_price,
+                "owner": owner_id,
+                "url": url,
+            },
         )
         item_id = result.lastrowid  # type: ignore[attr-defined]
         assert item_id is not None
