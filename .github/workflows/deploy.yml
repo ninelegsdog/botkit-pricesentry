@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  APP_DIR: /opt/pricesentry
+  APP_DIR: /home/deploy/botkit-pricesentry
 
 jobs:
   test:
@@ -25,7 +25,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             set -e
-            cd /opt/pricesentry
+            cd /home/deploy/botkit-pricesentry
 
             PREV_SHA=$(git rev-parse --short HEAD)
 
