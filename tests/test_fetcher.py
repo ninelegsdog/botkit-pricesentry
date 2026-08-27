@@ -75,5 +75,5 @@ async def test_fetch_price_via_fake_transport(monkeypatch: pytest.MonkeyPatch) -
             super().__init__(transport=transport, **kwargs)
 
     monkeypatch.setattr(fetcher_mod.httpx, "AsyncClient", _Client)
-    price = await fetch_price("https://shop.example/widget")
+    price = await fetch_price("https://www.wildberries.ru/widget")
     assert price == 1499.90
