@@ -3,16 +3,50 @@ from __future__ import annotations
 import json
 import re
 from typing import Any
+from urllib.parse import urlparse
 
 import httpx
 
 _HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; PriceSentry/1.0)"}
 _TIMEOUT = 10.0
 
+# Allowed domains for SSRF protection
+ALLOWED_DOMAINS = {
+    # Wildberries
+    "wildberries.ru",
+    "www.wildberries.ru",
+    "card.wbstatic.net",
+    "static.wbstatic.net",
+    "wbstatic.net",
+    # Ozon
+    "ozon.ru",
+    "www.ozon.ru",
+    "cdn.ozon.ru",
+    "static.ozon.ru",
+}
+
 _PRICE_RE = re.compile(r"(\d[\d\s]*)\s?(?:₽|руб\.)")
 
 
+def _validate_url(url: str) -> bool:
+    """Validate URL against allowed domains to prevent SSRF."""
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme not in ("http", "https"):
+            return False
+        hostname = parsed.hostname or ""
+        # Check exact match or subdomain match
+        return any(
+            hostname == domain or hostname.endswith("." + domain)
+            for domain in ALLOWED_DOMAINS
+        )
+    except Exception:
+        return False
+
+
 async def fetch_html(url: str) -> str:
+    if not _validate_url(url):
+        raise ValueError(f"URL not in allowed domains: {url}")
     async with httpx.AsyncClient(
         timeout=_TIMEOUT, follow_redirects=True, headers=_HEADERS
     ) as client:

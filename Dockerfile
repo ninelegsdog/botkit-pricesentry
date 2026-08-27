@@ -5,5 +5,6 @@ COPY --chown=botuser:botuser pyproject.toml .
 COPY --chown=botuser:botuser src/ src/
 RUN pip install --no-cache-dir . && pip install --no-cache-dir --upgrade pip
 USER 1001:1001
-HEALTHCHECK --interval=30s --timeout=5s CMD python -c "import urllib.request as u; u.urlopen('http://localhost:8086/health')"
+ARG PORT
+HEALTHCHECK --interval=30s --timeout=5s CMD python -c "import urllib.request as u; u.urlopen('http://localhost:${PORT}/health')"
 CMD ["python", "-m", "src.bot"]
