@@ -31,7 +31,7 @@ class Config:
             except ValueError:
                 logging.warning("Invalid admin id ignored: %r", token)
         return cls(
-            bot_token=os.getenv("BOT_TOKEN", ""),
+            bot_token=os.getenv("TELEGRAM_BOT_TOKEN", ""),
             admin_password=os.getenv("ADMIN_PASSWORD", ""),
             admin_ids=admin_ids,
             db_path=os.getenv("DB_PATH", "pricesentry.db"),
