@@ -31,7 +31,7 @@ from src.scheduler.loop import price_check_loop
 # Config
 # --------------------------------------------------------------------------- #
 def test_config_from_env_reads_plain_env(monkeypatch):
-    monkeypatch.setenv("BOT_TOKEN", "tok")
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "tok")
     monkeypatch.setenv("ADMIN_PASSWORD", "pw")
     monkeypatch.setenv("ADMIN_IDS", "1,2,3")
     monkeypatch.setenv("REDIS_URL", "redis://h:1")
@@ -43,7 +43,7 @@ def test_config_from_env_reads_plain_env(monkeypatch):
 
 
 def test_config_validate_raises_when_missing(monkeypatch):
-    monkeypatch.delenv("BOT_TOKEN", raising=False)
+    monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
     monkeypatch.delenv("ADMIN_PASSWORD", raising=False)
     monkeypatch.delenv("ADMIN_IDS", raising=False)
     cfg = Config(bot_token="", admin_password="", admin_ids=[])
