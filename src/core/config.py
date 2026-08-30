@@ -14,6 +14,8 @@ class Config:
     redis_url: str = "redis://localhost:6379/0"
     log_level: str = "INFO"
     sentry_dsn: str = ""
+    webhook_url: str = ""
+    webhook_cert_path: str = ""
     metrics_port: int = 8086
     scheduler_interval: int = 21600  # 6 hours
     default_currency: str = "RUB"
@@ -38,6 +40,8 @@ class Config:
             redis_url=os.getenv("REDIS_URL", "redis://localhost:6379/0"),
             log_level=os.getenv("LOG_LEVEL", "INFO"),
             sentry_dsn=os.getenv("SENTRY_DSN", ""),
+            webhook_url=os.getenv("WEBHOOK_URL", ""),
+            webhook_cert_path=os.getenv("WEBHOOK_CERT_PATH", ""),
             metrics_port=int(os.getenv("METRICS_PORT", "8086")),
             scheduler_interval=int(os.getenv("SCHEDULER_INTERVAL", "21600")),
         )
