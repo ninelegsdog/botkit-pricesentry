@@ -16,6 +16,7 @@ class Config:
     sentry_dsn: str = ""
     webhook_url: str = ""
     webhook_cert_path: str = ""
+    webhook_secret: str = ""
     metrics_port: int = 8086
     scheduler_interval: int = 21600  # 6 hours
     default_currency: str = "RUB"
@@ -42,6 +43,7 @@ class Config:
             sentry_dsn=os.getenv("SENTRY_DSN", ""),
             webhook_url=os.getenv("WEBHOOK_URL", ""),
             webhook_cert_path=os.getenv("WEBHOOK_CERT_PATH", ""),
+            webhook_secret=os.getenv("WEBHOOK_SECRET", ""),
             metrics_port=int(os.getenv("METRICS_PORT", "8086")),
             scheduler_interval=int(os.getenv("SCHEDULER_INTERVAL", "21600")),
         )
