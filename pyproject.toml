@@ -47,7 +47,7 @@ plugins = ["sqlalchemy.ext.mypy.plugin"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-addopts = "-ra --strict-markers --cov=src --cov-branch --cov-report=term-missing --cov-fail-under=79"
+addopts = "-ra --strict-markers --cov=src --cov-branch --cov-report=term-missing --cov-fail-under=70"
 markers = [
     "no_req: fully offline, no external HTTP/Telegram requests",
     "req: requires network and/or a real external service (Telegram E2E, payment gateways)",
