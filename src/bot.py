@@ -19,6 +19,7 @@ from src.core.migrations import migrate
 from src.core.sentry import init_sentry
 from src.core.tgwebhook import build_webhook_app
 from src.core.throttling import ThrottlingMiddleware
+from src.core.tracing import setup_tracing
 from src.scheduler.loop import price_check_loop
 
 
@@ -83,6 +84,7 @@ async def main() -> None:
     state = create_app()
     state.config.validate()
     setup_logging(level="INFO", json=True, bot_name="pricesentry")
+    setup_tracing(service_name="pricesentry")
     init_sentry(state.config.sentry_dsn)
     await migrate(state.db)
     state.dp.message.middleware(AuthMiddleware(state.db))
