@@ -11,7 +11,7 @@ class Config:
     admin_password: str = ""
     admin_ids: list[int] = None  # type: ignore[assignment]
     db_path: str = "pricesentry.db"
-    redis_url: str = "redis://localhost:6379/0"
+    redis_url: str = "redis://127.0.0.1:6380/5"
     log_level: str = "INFO"
     sentry_dsn: str = ""
     webhook_url: str = ""
