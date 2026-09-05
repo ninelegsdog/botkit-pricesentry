@@ -1,25 +1,14 @@
+"""Payments shim — re-exports botkit_core.payments."""
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from botkit_core.payments import MockPaymentProvider as MockPaymentProvider
+from botkit_core.payments import PaymentProvider as PaymentProvider
+from botkit_core.payments import YooKassaPaymentProvider as YooKassaPaymentProvider
+from botkit_core.payments import create_payment_provider as create_payment_provider
 
-
-class PaymentProvider(ABC):
-    @abstractmethod
-    async def create_payment(
-        self, *, title: str, description: str, payload: str, amount: int, currency: str = "RUB"
-    ) -> str:
-        ...
-
-    @abstractmethod
-    async def check_payment(self, payment_id: str) -> bool:
-        ...
-
-
-class MockPaymentProvider(PaymentProvider):
-    async def create_payment(
-        self, *, title: str, description: str, payload: str, amount: int, currency: str = "RUB"
-    ) -> str:
-        return "mock_payment_123"
-
-    async def check_payment(self, payment_id: str) -> bool:
-        return True
+__all__ = [
+    "MockPaymentProvider",
+    "PaymentProvider",
+    "YooKassaPaymentProvider",
+    "create_payment_provider",
+]
