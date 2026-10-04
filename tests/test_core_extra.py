@@ -330,6 +330,20 @@ async def admin_state():
 
 
 @pytest.mark.asyncio
+async def test_pricesentry_cmd_start_clears_state(pricesentry_state):
+    bot = _make_bot()
+    pricesentry_state.bot = bot
+    router = create_pricesentry_router(pricesentry_state)
+    storage = MemoryStorage()
+    key = StorageKey(chat_id=1, user_id=1, bot_id=0, business_connection_id=None)
+    fsm_ctx = FSMContext(storage, key)
+    await fsm_ctx.set_state(ItemAdd.entering_sku)
+    assert await fsm_ctx.get_state() is not None
+    await _handler(router, "cmd_start")(_make_message(bot, "/start"), state=fsm_ctx)
+    assert await fsm_ctx.get_state() is None
+
+
+@pytest.mark.asyncio
 async def test_pricesentry_start_and_add_flow(pricesentry_state):
     bot = _make_bot()
     pricesentry_state.bot = bot
