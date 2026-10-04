@@ -337,7 +337,7 @@ async def test_pricesentry_start_and_add_flow(pricesentry_state):
     storage = MemoryStorage()
     key = StorageKey(chat_id=1, user_id=1, bot_id=0, business_connection_id=None)
 
-    await _handler(router, "cmd_start")(_make_message(bot, "/start"))
+    await _handler(router, "cmd_start")(_make_message(bot, "/start"), state=FSMContext(storage, key))
     await _handler(router, "start_add")(_make_message(bot, "add"), state=FSMContext(storage, key))
     await _handler(router, "enter_sku")(_make_message(bot, "SKU1"), state=FSMContext(storage, key))
     await _handler(router, "choose_marketplace")(_make_callback(bot, "mp:wb"), state=FSMContext(storage, key))
