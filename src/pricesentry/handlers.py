@@ -6,6 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from src.core.bot_factory import AppState
+from src.core.callbacks import parse_callback_int
 from src.core.fsm import ItemAdd
 from src.core.nav import client_menu
 from src.core.ui import alert_card, escape, item_card
@@ -140,7 +141,10 @@ def create_pricesentry_router(app_state: AppState) -> Router:
     async def show_history(callback: CallbackQuery) -> None:
         if not callback.data:
             return
-        item_id = int(callback.data.split(":")[1])
+        item_id = parse_callback_int(callback.data, "hist:")
+        if item_id is None:
+            await callback.answer("Некорректный запрос.", show_alert=True)
+            return
         history = await service.get_price_history(db, item_id, limit=5)
         if not history:
             await callback.message.edit_text("Нет истории цен.")  # type: ignore[union-attr]
@@ -153,7 +157,10 @@ def create_pricesentry_router(app_state: AppState) -> Router:
     async def delete_item(callback: CallbackQuery) -> None:
         if not callback.data:
             return
-        item_id = int(callback.data.split(":")[1])
+        item_id = parse_callback_int(callback.data, "del:")
+        if item_id is None:
+            await callback.answer("Некорректный запрос.", show_alert=True)
+            return
         kb = InlineKeyboardMarkup(
             inline_keyboard=[
                 [
@@ -169,7 +176,10 @@ def create_pricesentry_router(app_state: AppState) -> Router:
     async def confirm_delete(callback: CallbackQuery) -> None:
         if not callback.data:
             return
-        item_id = int(callback.data.split(":")[1])
+        item_id = parse_callback_int(callback.data, "del_yes:")
+        if item_id is None:
+            await callback.answer("Некорректный запрос.", show_alert=True)
+            return
         await service.delete_item(db, item_id)
         await callback.message.edit_text("✅ Товар удалён.")  # type: ignore[union-attr]
         await callback.answer()
