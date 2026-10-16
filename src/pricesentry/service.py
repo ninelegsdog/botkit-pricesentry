@@ -56,10 +56,18 @@ async def get_item(db: Database, item_id: int) -> dict[str, Any] | None:
 
 
 async def delete_item(db: Database, item_id: int) -> None:
+    """Удаляет товар вместе с его историей цен и уведомлениями.
+
+    Прежнее мягкое удаление (is_active = 0) оставляло price_history с привязкой
+    к item_id: история принадлежала товару только по совпадению номера, и в
+    мультиарендной базе новый товар мог показать чужие цены. Схема объявляет
+    ON DELETE CASCADE, но SQLite не применяет его без PRAGMA foreign_keys,
+    поэтому чистим явно, в одной транзакции.
+    """
     async with db.transaction() as session:
-        await session.execute(
-            text("UPDATE monitored_items SET is_active = 0 WHERE id = :id"), {"id": item_id}
-        )
+        await session.execute(text("DELETE FROM price_history WHERE item_id = :id"), {"id": item_id})
+        await session.execute(text("DELETE FROM alerts WHERE item_id = :id"), {"id": item_id})
+        await session.execute(text("DELETE FROM monitored_items WHERE id = :id"), {"id": item_id})
 
 
 async def update_item_price(db: Database, item_id: int, new_price: float) -> None:
