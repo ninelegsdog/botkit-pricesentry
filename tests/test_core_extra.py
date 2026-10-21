@@ -453,8 +453,14 @@ async def test_price_check_loop_isolates_one_bad_item():
     fake_bot = MagicMock()
     fake_bot.send_message = AsyncMock()
     items = [
-        {"id": 4, "owner_id": 1, "url": "https://blocked.example/x", "current_price": 4990.0, "target_price": None, "name": "WB"},
-        {"id": 5, "owner_id": 1, "url": None, "current_price": 50.0, "target_price": None, "name": "NoURL"},
+        {
+            "id": 4, "owner_id": 1, "url": "https://blocked.example/x",
+            "current_price": 4990.0, "target_price": None, "name": "WB",
+        },
+        {
+            "id": 5, "owner_id": 1, "url": None,
+            "current_price": 50.0, "target_price": None, "name": "NoURL",
+        },
     ]
     with patch("src.scheduler.loop.service.get_all_active_items", new=AsyncMock(return_value=items)), \
          patch("src.scheduler.loop._fresh_price", new=AsyncMock(return_value=50.0)), \
@@ -472,7 +478,9 @@ async def test_price_check_loop_disabled_by_zero_interval():
     ни одной работы и завершается, а не крутится (негатив F1: выключенный
     цикл не трогает данные — следовательно, алерт не приходит)."""
     fake_bot = MagicMock()
-    get_all = AsyncMock(return_value=[{"id": 1, "url": None, "current_price": 1.0, "target_price": None, "owner_id": 1}])
+    get_all = AsyncMock(return_value=[
+        {"id": 1, "url": None, "current_price": 1.0, "target_price": None, "owner_id": 1},
+    ])
     with patch("src.scheduler.loop.service.get_all_active_items", get_all), \
          patch("src.scheduler.loop._fresh_price", new=AsyncMock(return_value=1.0)), \
          patch("src.scheduler.loop.service.record_price", new=AsyncMock()) as rec:
