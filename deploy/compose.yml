@@ -19,6 +19,7 @@ services:
       - "host.docker.internal:host-gateway"
     environment:
       - METRICS_PORT=${METRICS_PORT}
+      - SCHEDULER_INTERVAL=${SCHEDULER_INTERVAL:-21600}
       - BIND_HOST=0.0.0.0
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - TELEGRAM_WEBHOOK_SECRET=${TELEGRAM_WEBHOOK_SECRET}

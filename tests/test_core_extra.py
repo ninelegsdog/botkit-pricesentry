@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -439,3 +440,55 @@ async def test_price_check_loop_processes_item_and_alerts():
          patch("src.scheduler.loop.asyncio.sleep", side_effect=_BreakLoop), pytest.raises(_BreakLoop):
         await price_check_loop(fake_bot, MagicMock(), interval=10)
     fake_bot.send_message.assert_awaited()
+
+
+@pytest.mark.asyncio
+async def test_price_check_loop_isolates_one_bad_item():
+    """Сбой фетча одного товара не убивает остальные.
+
+    Живой факт F1: WB отвечает 498, raise_for_status внутри общего try
+    обрывал весь цикл — record_price не вызывался вообще, цены не
+    обновлялись и алерт не мог прийти никогда.
+    """
+    fake_bot = MagicMock()
+    fake_bot.send_message = AsyncMock()
+    items = [
+        {
+            "id": 4, "owner_id": 1, "url": "https://blocked.example/x",
+            "current_price": 4990.0, "target_price": None, "name": "WB",
+        },
+        {
+            "id": 5, "owner_id": 1, "url": None,
+            "current_price": 50.0, "target_price": None, "name": "NoURL",
+        },
+    ]
+    with patch("src.scheduler.loop.service.get_all_active_items", new=AsyncMock(return_value=items)), \
+         patch("src.scheduler.loop._fresh_price", new=AsyncMock(return_value=50.0)), \
+         patch("src.scheduler.loop.service.record_price", new=AsyncMock()) as rec, \
+         patch("src.pricesentry.fetcher.fetch_price", new=AsyncMock(side_effect=RuntimeError("HTTP 498"))), \
+         patch("src.scheduler.loop.asyncio.sleep", side_effect=_BreakLoop), pytest.raises(_BreakLoop):
+        await price_check_loop(fake_bot, MagicMock(), interval=10)
+    recorded = {int(c.args[1]) for c in rec.await_args_list}
+    assert {4, 5} <= recorded, f"после сбоя фетча дошли не все товары: {recorded}"
+
+
+@pytest.mark.asyncio
+async def test_price_check_loop_disabled_by_zero_interval():
+    """SCHEDULER_INTERVAL=0 — признак «проверка выключена»: цикл не делает
+    ни одной работы и завершается, а не крутится (негатив F1: выключенный
+    цикл не трогает данные — следовательно, алерт не приходит)."""
+    fake_bot = MagicMock()
+    get_all = AsyncMock(return_value=[
+        {"id": 1, "url": None, "current_price": 1.0, "target_price": None, "owner_id": 1},
+    ])
+    with patch("src.scheduler.loop.service.get_all_active_items", get_all), \
+         patch("src.scheduler.loop._fresh_price", new=AsyncMock(return_value=1.0)), \
+         patch("src.scheduler.loop.service.record_price", new=AsyncMock()) as rec:
+        try:
+            await asyncio.wait_for(price_check_loop(fake_bot, MagicMock(), interval=0), timeout=2)
+            returned = True
+        except TimeoutError:
+            returned = False
+    assert returned, "цикл при interval=0 завис вместо выключения"
+    get_all.assert_not_awaited()
+    rec.assert_not_awaited()
