@@ -22,6 +22,14 @@ from src.core.tracing import setup_tracing
 from src.scheduler.loop import price_check_loop
 
 
+async def _cancel(task: asyncio.Task[None]) -> None:
+    task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        pass
+
+
 async def _run_webhook(state: Any, shutdown_event: asyncio.Event) -> None:
     app = build_webhook_app(state.dp, state.bot, state.config.webhook_secret)
     app["state"] = state
@@ -48,9 +56,16 @@ async def _run_webhook(state: Any, shutdown_event: asyncio.Event) -> None:
         secret_token=state.config.webhook_secret or None,
     )
     logging.info("Telegram webhook registered: %s", state.config.webhook_url)
+    # Фоновая проверка цен обязана работать и в webhook-режиме: до правки F1
+    # цикл создавался только в _run_polling, то есть на проде мониторинг молчал,
+    # а /health при этом отвечал ok.
+    price_check_task = asyncio.create_task(
+        price_check_loop(state.bot, state.db, state.config.scheduler_interval)
+    )
     try:
         await shutdown_event.wait()
     finally:
+        await _cancel(price_check_task)
         await state.bot.delete_webhook()
         await runner.cleanup()
 
@@ -67,11 +82,7 @@ async def _run_polling(state: Any, shutdown_event: asyncio.Event) -> None:
             asyncio.create_task(shutdown_event.wait()),
         ])
     finally:
-        price_check_task.cancel()
-        try:
-            await price_check_task
-        except asyncio.CancelledError:
-            pass
+        await _cancel(price_check_task)
         await state.dp.stop_polling()
         await state.bot.session.close()
         await runner.cleanup()
