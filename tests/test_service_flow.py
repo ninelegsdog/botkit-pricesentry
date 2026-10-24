@@ -22,10 +22,10 @@ async def test_full_monitoring_flow(db):
     assert float(item["current_price"]) == 49999.0
 
     await service.record_price(db, item_id, 49999.0)
-    history = await service.get_price_history(db, item_id)
+    history = await service.get_price_history(db, item_id, 111)
     assert len(history) == 1
 
-    await service.delete_item(db, item_id)
+    await service.delete_item(db, item_id, 111)
     items = await service.get_user_items(db, 111)
     assert len(items) == 0
 

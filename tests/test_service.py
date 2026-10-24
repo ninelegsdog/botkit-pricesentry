@@ -45,7 +45,7 @@ async def test_delete_item(db):
     item_id = await service.add_item(
         db, owner_id=123, sku="WB-123", name="Phone", marketplace="wb"
     )
-    await service.delete_item(db, item_id)
+    await service.delete_item(db, item_id, 123)
     items = await service.get_user_items(db, 123)
     assert len(items) == 0
 
@@ -56,7 +56,7 @@ async def test_record_price(db):
         db, owner_id=123, sku="WB-123", name="Phone", marketplace="wb"
     )
     await service.record_price(db, item_id, 100.5)
-    history = await service.get_price_history(db, item_id)
+    history = await service.get_price_history(db, item_id, 123)
     assert len(history) == 1
     assert float(history[0]["price"]) == 100.5
 
@@ -68,7 +68,7 @@ async def test_get_price_history_limit(db):
     )
     for p in [100.0, 90.0, 80.0, 70.0, 60.0]:
         await service.record_price(db, item_id, p)
-    history = await service.get_price_history(db, item_id, limit=3)
+    history = await service.get_price_history(db, item_id, 123, limit=3)
     assert len(history) == 3
 
 
