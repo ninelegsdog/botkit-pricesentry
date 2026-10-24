@@ -145,7 +145,7 @@ def create_pricesentry_router(app_state: AppState) -> Router:
         if item_id is None:
             await callback.answer("Некорректный запрос.", show_alert=True)
             return
-        history = await service.get_price_history(db, item_id, limit=5)
+        history = await service.get_price_history(db, item_id, callback.from_user.id, limit=5)
         if not history:
             await callback.message.edit_text("Нет истории цен.")  # type: ignore[union-attr]
         else:
@@ -180,7 +180,10 @@ def create_pricesentry_router(app_state: AppState) -> Router:
         if item_id is None:
             await callback.answer("Некорректный запрос.", show_alert=True)
             return
-        await service.delete_item(db, item_id)
+        deleted = await service.delete_item(db, item_id, callback.from_user.id)
+        if not deleted:
+            await callback.answer("Товар не найден.", show_alert=True)
+            return
         await callback.message.edit_text("✅ Товар удалён.")  # type: ignore[union-attr]
         await callback.answer()
 
