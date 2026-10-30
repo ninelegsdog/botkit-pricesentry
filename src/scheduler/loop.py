@@ -12,8 +12,8 @@ logger = logging.getLogger(__name__)
 
 
 async def price_check_loop(bot: Bot, db: Database, interval: int = 21600) -> None:
-    from src.pricesentry.fetcher import fetch_price
     from src.core.metrics import PRICE_FETCH_FAILURES_TOTAL
+    from src.pricesentry.fetcher import fetch_price
 
     if interval <= 0:
         # Признак «проверка выключена» (SCHEDULER_INTERVAL=0): не делаем
