@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 async def price_check_loop(bot: Bot, db: Database, interval: int = 21600) -> None:
+    from src.core.metrics import PRICE_FETCH_FAILURES_TOTAL
     from src.pricesentry.fetcher import fetch_price
 
     if interval <= 0:
@@ -30,12 +31,13 @@ async def price_check_loop(bot: Bot, db: Database, interval: int = 21600) -> Non
                     if url:
                         try:
                             fetched = await fetch_price(str(url))
-                        except Exception:
+                        except Exception as exc:
                             # Один заблокированный URL (живой факт: WB
                             # отвечает 498) не должен убивать весь цикл —
                             # товар остаётся на цене из БД, остальные идут дальше.
                             fetched = None
-                            logger.exception("Price fetch failed for item %s", item_id)
+                            PRICE_FETCH_FAILURES_TOTAL.inc()
+                            logger.warning("Price fetch failed for item %s: %s", item_id, exc)
                         if fetched is not None and fetched != float(item.get("current_price", 0)):
                             await service.update_item_price(db, item_id, fetched)
                     current = await _fresh_price(db, item_id)

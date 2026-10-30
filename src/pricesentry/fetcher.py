@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import re
 from typing import Any
@@ -7,8 +8,16 @@ from urllib.parse import urlparse
 
 import httpx
 
-_HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; PriceSentry/1.0)"}
+_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "ru-RU,ru;q=0.9,en;q=0.8",
+}
 _TIMEOUT = 10.0
+_MAX_RETRIES = 2
 
 # Allowed domains for SSRF protection
 ALLOWED_DOMAINS = {
@@ -47,12 +56,28 @@ def _validate_url(url: str) -> bool:
 async def fetch_html(url: str) -> str:
     if not _validate_url(url):
         raise ValueError(f"URL not in allowed domains: {url}")
-    async with httpx.AsyncClient(
-        timeout=_TIMEOUT, follow_redirects=True, headers=_HEADERS
-    ) as client:
-        resp = await client.get(url)
-        resp.raise_for_status()
-        return resp.text
+    last_exc: Exception | None = None
+    for attempt in range(_MAX_RETRIES + 1):
+        try:
+            async with httpx.AsyncClient(
+                timeout=_TIMEOUT, follow_redirects=True, headers=_HEADERS
+            ) as client:
+                resp = await client.get(url)
+                # 4xx (включая 498 anti-bot) — не ретраим, это не временная ошибка.
+                if 400 <= resp.status_code < 500:
+                    resp.raise_for_status()
+                resp.raise_for_status()
+                return resp.text
+        except httpx.HTTPStatusError as exc:
+            if 400 <= exc.response.status_code < 500:
+                raise
+            last_exc = exc
+        except httpx.RequestError as exc:
+            last_exc = exc
+        if attempt < _MAX_RETRIES:
+            await asyncio.sleep(1.0 * (attempt + 1))
+    assert last_exc is not None
+    raise last_exc
 
 
 def _extract_jsonld_price(html: str) -> float | None:
