@@ -30,6 +30,10 @@ ALERTS_SENT_TOTAL = Counter(
     "bot_alerts_sent_total",
     "Price alerts sent",
 )
+PRICE_FETCH_FAILURES_TOTAL = Counter(
+    "bot_price_fetch_failures_total",
+    "Price fetch failures (blocked/timeout)",
+)
 ERRORS_TOTAL = BOTKIT_ERRORS_TOTAL
 
 
