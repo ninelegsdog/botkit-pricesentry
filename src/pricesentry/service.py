@@ -55,8 +55,13 @@ async def get_item(db: Database, item_id: int) -> dict[str, Any] | None:
         return dict(row) if row else None
 
 
-async def delete_item(db: Database, item_id: int) -> None:
+async def delete_item(db: Database, item_id: int, user_id: int) -> bool:
     """Удаляет товар вместе с его историей цен и уведомлениями.
+
+    Удаление разрешено только владельцу: `WHERE id = :id AND user_id = :uid`.
+    При несовпадении владельца (или отсутствии товара) возвращает False и ничего
+    не удаляет — одинаковый ответ на «нет такого» и «чужой», чтобы callback не
+    стал оракулом существующих id (паттерн store/get_delivery).
 
     Прежнее мягкое удаление (is_active = 0) оставляло price_history с привязкой
     к item_id: история принадлежала товару только по совпадению номера, и в
@@ -65,9 +70,20 @@ async def delete_item(db: Database, item_id: int) -> None:
     поэтому чистим явно, в одной транзакции.
     """
     async with db.transaction() as session:
+        # Сначала проверяем владение: если товар чужой/несуществующий — отказ.
+        owner = await session.execute(
+            text("SELECT 1 FROM monitored_items WHERE id = :id AND owner_id = :uid"),
+            {"id": item_id, "uid": user_id},
+        )
+        if owner.first() is None:
+            return False
         await session.execute(text("DELETE FROM price_history WHERE item_id = :id"), {"id": item_id})
         await session.execute(text("DELETE FROM alerts WHERE item_id = :id"), {"id": item_id})
-        await session.execute(text("DELETE FROM monitored_items WHERE id = :id"), {"id": item_id})
+        await session.execute(
+            text("DELETE FROM monitored_items WHERE id = :id AND owner_id = :uid"),
+            {"id": item_id, "uid": user_id},
+        )
+        return True
 
 
 async def update_item_price(db: Database, item_id: int, new_price: float) -> None:
@@ -97,8 +113,23 @@ async def record_price(db: Database, item_id: int, price: float) -> None:
         )
 
 
-async def get_price_history(db: Database, item_id: int, limit: int = 10) -> list[dict[str, Any]]:
+async def get_price_history(
+    db: Database, item_id: int, user_id: int, limit: int = 10
+) -> list[dict[str, Any]]:
+    """История цен товара, но только если товар принадлежит user_id.
+
+    Без фильтра по владельцу `hist:<id>` утекал историю чужих товаров.
+    При чужом/несуществующем item_id возвращается пустой список — ответ
+    «Нет истории цен.», не различающий «нет» и «чужой».
+    """
     async with db.session() as session:
+        # Проверяем владение до чтения истории.
+        owner = await session.execute(
+            text("SELECT 1 FROM monitored_items WHERE id = :id AND owner_id = :uid"),
+            {"id": item_id, "uid": user_id},
+        )
+        if owner.first() is None:
+            return []
         result = await session.execute(
             text(
                 "SELECT * FROM price_history WHERE item_id = :item ORDER BY checked_at DESC LIMIT :lim"
