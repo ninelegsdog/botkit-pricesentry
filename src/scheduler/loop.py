@@ -31,7 +31,7 @@ async def price_check_loop(bot: Bot, db: Database, interval: int = 21600) -> Non
                     if url:
                         try:
                             fetched = await fetch_price(str(url))
-                        except Exception as exc:
+                        except Exception:
                             # Один заблокированный URL (живой факт: WB
                             # отвечает 498) не должен убивать весь цикл —
                             # товар остаётся на цене из БД, остальные идут дальше.
