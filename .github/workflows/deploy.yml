@@ -78,6 +78,8 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
+          secrets: |
+            BOTKIT_CORE_TOKEN=${{ secrets.BOTKIT_CORE_TOKEN }}
           cache-to: type=gha,mode=max
           build-args: |
             BUILD_SHA=${{ github.sha }}

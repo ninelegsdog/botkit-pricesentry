@@ -81,6 +81,8 @@ jobs:
           push: false
           build-args: |
             BUILD_SHA=${{ github.sha }}
+          secrets: |
+            BOTKIT_CORE_TOKEN=${{ secrets.BOTKIT_CORE_TOKEN }}
 
   # Офлайн-прогоны кейсов фермы по коду этого PR (botkit-farm → farm-smoke.yml).
   # Отдельный job, а не шаг в check: под ним заработает общий гейт, и его
