@@ -10,7 +10,7 @@ requires-python = ">=3.12"
 dependencies = [
     "prometheus-client>=0.20",
     "sentry-sdk>=2.0",
-    "aiogram>=3.30",
+    "aiogram>=3.9,<4",
     "aiosqlite>=0.19",
     "sqlalchemy[asyncio]>=2.0",
     "redis>=5.0",
