@@ -1,6 +1,6 @@
-FROM python@sha256:f17ec845ebdd4f3347431579e1c22eaeec82913f039f2a54b937c7ff870bacdb AS base
+FROM python:3.13-slim AS base
 RUN useradd -m -u 1001 botuser
-RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends git gcc build-essential && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 # uv is used only to read uv.lock and emit a constraints file. It is deleted again
 # before the layer is sealed, and the runtime stages copy site-packages only, so the

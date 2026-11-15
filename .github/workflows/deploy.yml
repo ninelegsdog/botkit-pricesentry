@@ -55,7 +55,7 @@ jobs:
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069  # v4.3.0  # v3.8.0
 
       - name: Login to GHCR
-        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6  # v4.6.0  # v3.3.0
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550  # v4.6.0  # v3.3.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -78,6 +78,8 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
+          secrets: |
+            BOTKIT_CORE_TOKEN=${{ secrets.BOTKIT_CORE_TOKEN }}
           cache-to: type=gha,mode=max
           build-args: |
             BUILD_SHA=${{ github.sha }}
