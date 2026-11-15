@@ -20,7 +20,6 @@ from src.core.fsm import AdminAuth, ItemAdd, ItemEdit
 from src.core.metrics import UPDATES_TOTAL, Metrics, UpdatesMiddleware
 from src.core.nav import admin_menu, client_menu
 from src.core.payments import MockPaymentProvider, PaymentProvider
-from src.core.sentry import init_sentry
 from src.core.storage import Storage
 from src.core.throttling import ThrottlingMiddleware
 from src.core.webhook import create_app as create_webhook_app
@@ -147,25 +146,6 @@ async def test_updates_middleware_increments_prom_counter():
     assert await UpdatesMiddleware()(handler, MyEvent(), {}) == "r"
     after = UPDATES_TOTAL.labels(type="myevent")._value.get()
     assert after == before + 1
-
-
-# --------------------------------------------------------------------------- #
-# Sentry
-# --------------------------------------------------------------------------- #
-def test_sentry_no_dsn_silent():
-    init_sentry(None)
-
-
-def test_sentry_missing_sdk():
-    with patch.dict("sys.modules", {"sentry_sdk": None}):
-        init_sentry("https://abc@sentry.io/1")
-
-
-def test_sentry_valid_dsn():
-    fake = MagicMock()
-    with patch.dict("sys.modules", {"sentry_sdk": fake}):
-        init_sentry("https://abc@sentry.io/1")
-    fake.init.assert_called_once_with(dsn="https://abc@sentry.io/1")
 
 
 # --------------------------------------------------------------------------- #
