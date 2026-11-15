@@ -13,7 +13,6 @@ class Config:
     db_path: str = "pricesentry.db"
     redis_url: str = "redis://127.0.0.1:6380/5"
     log_level: str = "INFO"
-    sentry_dsn: str = ""
     webhook_url: str = ""
     webhook_secret: str = ""
     metrics_port: int = 8086
@@ -39,7 +38,6 @@ class Config:
             db_path=os.getenv("DB_PATH", "pricesentry.db"),
             redis_url=os.getenv("REDIS_URL", "redis://localhost:6379/0"),
             log_level=os.getenv("LOG_LEVEL", "INFO"),
-            sentry_dsn=os.getenv("SENTRY_DSN", ""),
             webhook_url=os.getenv("WEBHOOK_URL", ""),
             webhook_secret=os.getenv("WEBHOOK_SECRET", ""),
             metrics_port=int(os.getenv("METRICS_PORT", "8086")),
