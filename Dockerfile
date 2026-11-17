@@ -1,4 +1,4 @@
-FROM python:3.13-slim AS base
+FROM python:3.15-slim AS base
 RUN useradd -m -u 1001 botuser
 RUN apt-get update && apt-get install -y --no-install-recommends git gcc build-essential && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
